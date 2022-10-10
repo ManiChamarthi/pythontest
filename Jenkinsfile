@@ -6,6 +6,11 @@ pipeline {
         sh 'python3 --version'
       }
     }
+    stage("Approval")
+    input{
+      message "To Suspend Wiz Users click on OK"
+      ok "Approve"
+    }
     stage('hello') {
       steps {
         sh 'python -m pip install pandas'
