@@ -8,6 +8,7 @@ pipeline {
     }
     stage('hello') {
       steps {
+        sh 'pip install pandas'
         sh 'python3 mytest.py'
       }
     }
