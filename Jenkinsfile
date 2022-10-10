@@ -11,6 +11,10 @@ pipeline {
       message "To Suspend Wiz Users click on OK"
       ok "Approve"
     }
+      steps {
+        echo "executing"
+        sh "python3 --version"
+      }
   }
     stage('hello') {
       steps {
