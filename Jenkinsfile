@@ -7,7 +7,7 @@ pipeline {
       }
     }
     stage("Approval")
-    input{
+    input { 
       message "To Suspend Wiz Users click on OK"
       ok "Approve"
     }
