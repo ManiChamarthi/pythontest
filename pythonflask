@@ -1,0 +1,51 @@
+from flask import Flask, render_template, request, redirect, url_for, send_file
+import pandas as pd
+import os
+
+app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = 'uploads'
+
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    if request.method == 'POST':
+        file1 = request.files['file1']
+        file2 = request.files['file2']
+
+        # Save uploaded files
+        file1_path = os.path.join(app.config['UPLOAD_FOLDER'], 'file1.csv')
+        file2_path = os.path.join(app.config['UPLOAD_FOLDER'], 'file2.csv')
+        file1.save(file1_path)
+        file2.save(file2_path)
+
+        # Retrieve mapped columns for comparison
+        map_column1_file1 = request.form['map_column1_file1']
+        map_column1_file2 = request.form['map_column1_file2']
+        # Retrieve more mapped columns as needed
+
+        # Read CSV files and compare mapped columns
+        df1 = pd.read_csv(file1_path, usecols=[map_column1_file1])
+        df2 = pd.read_csv(file2_path, usecols=[map_column1_file2])
+        differences = df1.merge(df2, indicator=True, how='outer').loc[lambda x: x['_merge'] != 'both']
+
+        # Save differences
+        diff_path = os.path.join(app.config['UPLOAD_FOLDER'], 'differences.csv')
+        differences.to_csv(diff_path, index=False)
+
+        return redirect(url_for('download'))
+
+    # Create options for column mapping dropdowns
+    options = ''  # Initialize an empty string to store <option> elements
+    columns_file1 = ['column_name_1', 'column_name_2', 'column_name_3']  # Replace with actual column names
+    columns_file2 = ['column_name_a', 'column_name_b', 'column_name_c']  # Replace with actual column names
+
+    for column in columns_file1:
+        options += f'<option value="{column}">{column}</option>'
+
+    return render_template('index.html', options=options)
+
+@app.route('/download')
+def download():
+    return send_file(os.path.join(app.config['UPLOAD_FOLDER'], 'differences.csv'), as_attachment=True)
+
+if __name__ == '__main__':
+    app.run(debug=True)
