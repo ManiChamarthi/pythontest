@@ -24,13 +24,7 @@ def index():
 
         return render_template('snowvr.html', options1=options1, options2=options2, success_message="Comparison completed successfully!")
 
-    # ... (create options for column mapping dropdowns)
-    columns_file1 = ['column_name_1', 'column_name_2', 'column_name_3']  # Replace with actual column names
-    columns_file2 = ['column_name_a', 'column_name_b', 'column_name_c']  # Replace with actual column names
-    options1 = ''.join([f'<option value="{column}">{column}</option>' for column in columns_file1])
-    options2 = ''.join([f'<option value="{column}">{column}</option>' for column in columns_file2])
-
-    return render_template('snowvr.html', options1=options1, options2=options2)
+    return render_template('snowvr.html')
 
 @server.route('/snow/download_matched')
 def download_matched():
