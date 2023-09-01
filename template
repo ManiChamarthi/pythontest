@@ -3,6 +3,30 @@
 <head>
     <title>CSV Comparison</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+    <script>
+        // Function to populate dropdown options based on uploaded file's column names
+        function populateDropdown(fileId, dropdownId) {
+            var file = document.getElementById(fileId).files[0];
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                var text = e.target.result;
+                var lines = text.split("\n");
+                var columnNames = lines[0].split(",");
+                var dropdown = document.getElementById(dropdownId);
+                dropdown.innerHTML = '';
+                for (var i = 0; i < columnNames.length; i++) {
+                    var option = document.createElement('option');
+                    option.value = columnNames[i];
+                    option.text = columnNames[i];
+                    dropdown.appendChild(option);
+                }
+            };
+            reader.readAsText(file);
+        }
+    </script>
 </head>
 <body>
     <div class="container mt-5">
@@ -10,24 +34,22 @@
         <form method="POST" action="/snow" enctype="multipart/form-data">
             <div class="form-group">
                 <label for="file1">Upload File 1:</label>
-                <input type="file" class="form-control" name="file1" accept=".csv">
+                <input type="file" class="form-control" id="file1" name="file1" accept=".csv" onchange="populateDropdown('file1', 'map_column1_file1')">
             </div>
             <div class="form-group">
                 <label for="file2">Upload File 2:</label>
-                <input type="file" class="form-control" name="file2" accept=".csv">
+                <input type="file" class="form-control" id="file2" name="file2" accept=".csv" onchange="populateDropdown('file2', 'map_column1_file2')">
             </div>
 
             <h2>Map columns for comparison:</h2>
             <div class="form-group">
                 <label for="map_column1_file1">Column in File 1:</label>
-                <select class="form-control" name="map_column1_file1">
-                    {{ options1|safe }}
+                <select class="form-control" id="map_column1_file1" name="map_column1_file1">
                 </select>
             </div>
             <div class="form-group">
                 <label for="map_column1_file2">Column in File 2:</label>
-                <select class="form-control" name="map_column1_file2">
-                    {{ options2|safe }}
+                <select class="form-control" id="map_column1_file2" name="map_column1_file2">
                 </select>
             </div>
 
