@@ -1,0 +1,38 @@
+Certainly, here are some example test cases for comparing critical and high vulnerabilities (CVSS7+) between Panaseer data and SNOW VR data, including SLA calculation and ownership. Please adapt these test cases to your specific context and data sources:
+
+**Test Case 1: Severity Comparison**
+*Objective*: To verify that the severity levels of critical and high vulnerabilities (CVSS7+) are consistent between Panaseer and SNOW VR data.
+
+1. Identify a list of common vulnerabilities (using unique identifiers) present in both Panaseer and SNOW VR datasets.
+2. Compare the CVSS scores and severity levels for each common vulnerability.
+3. Expected Result: The severity levels in Panaseer should match the severity levels in SNOW VR for the same vulnerabilities.
+
+**Test Case 2: SLA Calculation**
+*Objective*: To ensure that the SLA calculations for critical and high vulnerabilities (CVSS7+) are aligned between Panaseer and SNOW VR data.
+
+1. Select a set of vulnerabilities with defined SLAs from both Panaseer and SNOW VR datasets.
+2. Compare the SLAs assigned to each vulnerability in both datasets.
+3. Expected Result: The SLAs for the same vulnerabilities should be consistent between Panaseer and SNOW VR.
+
+**Test Case 3: Ownership Comparison**
+*Objective*: To verify that the ownership or responsible parties assigned to critical and high vulnerabilities (CVSS7+) are the same in both Panaseer and SNOW VR data.
+
+1. Choose a sample of vulnerabilities from both datasets, focusing on those with identified ownership.
+2. Compare the ownership information for each vulnerability in Panaseer and SNOW VR.
+3. Expected Result: The ownership details should match for the same vulnerabilities between both datasets.
+
+**Test Case 4: Root Cause Analysis**
+*Objective*: To investigate discrepancies in severity, SLA, or ownership between Panaseer and SNOW VR data.
+
+1. Identify vulnerabilities with significant differences in severity, SLA, or ownership between the two datasets.
+2. Research the root causes for these differences, including data collection methods, processing steps, or integration issues.
+3. Expected Result: A clear understanding of why certain vulnerabilities exhibit disparities between Panaseer and SNOW VR.
+
+**Test Case 5: Recommendations and Communication**
+*Objective*: To provide actionable recommendations for improving data alignment and consistency.
+
+1. Based on your findings, create a list of recommendations for addressing discrepancies in severity, SLA, or ownership.
+2. Share your recommendations with relevant stakeholders and discuss potential solutions to improve data consistency.
+3. Expected Result: Clear recommendations that can help enhance the accuracy and reliability of vulnerability data across both platforms.
+
+Remember, these test cases are meant to guide you in ensuring data consistency and accuracy between Panaseer and SNOW VR. Adapt and expand them as needed to cover your specific data sources, processes, and requirements.
