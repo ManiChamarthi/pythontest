@@ -2,34 +2,37 @@
 <html>
 <head>
     <title>CSV Comparison</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
 </head>
 <body>
-    <h1>CSV Comparison</h1>
-    <form method="POST" action="/" enctype="multipart/form-data">
-        <label for="file1">Upload File 1:</label>
-        <input type="file" name="file1" accept=".csv"><br><br>
-        <label for="file2">Upload File 2:</label>
-        <input type="file" name="file2" accept=".csv"><br><br>
+    <div class="container mt-5">
+        <h1 class="mb-4">CSV Comparison</h1>
+        <form method="POST" action="/snow" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="file1">Upload File 1:</label>
+                <input type="file" class="form-control" name="file1" accept=".csv">
+            </div>
+            <div class="form-group">
+                <label for="file2">Upload File 2:</label>
+                <input type="file" class="form-control" name="file2" accept=".csv">
+            </div>
 
-        <h2>Map columns for comparison:</h2>
-        <p>Columns in File 1:</p>
-        <label>Column in File 1:
-            <select name="map_column1_file1">
-                <!-- Options dynamically generated in Python -->
-            </select>
-        </label>
-        <!-- Add more label-select pairs for other columns in File 1 -->
+            <h2>Map columns for comparison:</h2>
+            <div class="form-group">
+                <label for="map_column1_file1">Column in File 1:</label>
+                <select class="form-control" name="map_column1_file1">
+                    {{ options|safe }}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="map_column1_file2">Column in File 2:</label>
+                <select class="form-control" name="map_column1_file2">
+                    {{ options|safe }}
+                </select>
+            </div>
 
-        <p>Columns in File 2:</p>
-        <label>Column in File 2:
-            <select name="map_column1_file2">
-                <!-- Options dynamically generated in Python -->
-            </select>
-        </label>
-        <!-- Add more label-select pairs for other columns in File 2 -->
-
-        <br><br>
-        <input type="submit" value="Compare">
-    </form>
+            <button type="submit" class="btn btn-primary">Compare</button>
+        </form>
+    </div>
 </body>
 </html>
