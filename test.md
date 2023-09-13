@@ -1,10 +1,35 @@
-Certainly, I understand your request. Here's an updated example of how you might structure your test cases in an Excel-like format, including columns for Root Cause Analysis and Recommendations & Communication in case the test case fails:
+Certainly, here's an improved version of the architecture with clearer descriptions and formatting:
 
-| **Test Case ID** | **Objective** | **Steps to Reproduce** | **Expected Result** | **Actual Result** | **Pass/Fail** | **Root Cause Analysis (if Fail)** | **Recommendations & Communication (if Fail)** |
-|------------------|--------------|-----------------------|---------------------|-------------------|--------------|------------------------------------|--------------------------------------------|
-| TC001 | Severity Comparison | 1. Identify common vulnerabilities with unique IDs.<br>2. Compare severity levels and CVSS scores. | Severity levels in Panaseer match severity levels in SNOW VR for common vulnerabilities. | | | | |
-| TC002 | SLA Calculation | 1. Select vulnerabilities with defined SLAs from both sources.<br>2. Compare SLAs for common vulnerabilities. | SLAs for common vulnerabilities match between Panaseer and SNOW VR. | | | | |
-| TC003 | Ownership Comparison | 1. Choose a sample of vulnerabilities with identified ownership.<br>2. Compare ownership details. | Ownership details match for common vulnerabilities between Panaseer and SNOW VR. | | | | |
-| TC004 | Root Cause Analysis | 1. Identify vulnerabilities with significant differences in severity, SLA, or ownership.<br>2. Investigate root causes for discrepancies. | Clear understanding of reasons for disparities in certain vulnerabilities. | | | | |
-| TC005 | Recommendations and Communication | 1. Based on findings, create recommendations for improving data consistency.<br>2. Share recommendations with stakeholders. | Recommendations provided for data alignment and consistency improvements. | | | | |
+1. **Fetch Unscanned Reports from Wiz and Store in S3 Bucket**
+   - Implement a Lambda Function to retrieve unscanned reports from Wiz.
+   - Store these reports securely in an S3 bucket.
 
+2. **Retrieve CMDB Details and Store in S3**
+   - Develop a process to fetch CMDB (Configuration Management Database) details.
+   - Save this information in an S3 bucket alongside the reports.
+
+3. **Submit Adhoc Requests Using SNOW API**
+   - Utilize the ServiceNow (SNOW) API to submit adhoc requests with the following details:
+     a) Account email (retrieved from CMDB).
+     b) Description (extracted from Wiz reports).
+     c) Title for the request.
+
+4. **Send Advanced Email Notifications**
+   - Send advanced email notifications to our team, 6 hours before raising the SNOW requests.
+   - Include the ticket details in the email and create a reference file.
+
+5. **Monitor SNOW Request Status**
+   - Continuously monitor the status of the SNOW requests for existing tickets.
+
+6. **Open New Requests for Closed Tickets**
+   - If a ticket is marked as closed in SNOW, open a new request as needed.
+   - In case a new entry is found on the same cloud account, raise another SNOW ticket accordingly.
+
+7. **Handle Special Cases with Exceptions**
+   - Implement a mechanism to handle special cases and exceptions.
+   - Customize the process based on specific conditions.
+
+8. **Scheduled Cloud Account Checks**
+   - Periodically, check the cloud account for updates and run the entire process as needed.
+
+This revised architecture provides a more organized and detailed overview of your system's workflow for fetching, processing, and managing requests, as well as handling various scenarios and exceptions.
