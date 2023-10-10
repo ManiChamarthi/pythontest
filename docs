@@ -1,39 +1,43 @@
-Title: "Snoozed Vulnerabilities in Wiz - Documentation"
+import requests
 
-Introduction:
-You create a Confluence page with this title to document snoozed vulnerabilities in your cloud infrastructure identified by Wiz. This documentation is crucial for transparency, accountability, and ongoing management of security vulnerabilities.
+def get_ritm_by_number(instance_url, username, password, ritm_number):
+    # Set up the request headers with Basic Authentication
+    headers = {
+        'Accept': 'application/json',
+    }
 
-Snoozed Vulnerabilities:
-You list a few examples of snoozed vulnerabilities:
+    auth = (username, password)
 
-Vulnerability Name: CVE-2023-12345
+    # Construct the URL for retrieving the RITM by number
+    ritm_url = f'{instance_url}/api/now/table/sc_req_item'
+    
+    # Specify query parameters to filter by RITM number
+    params = {
+        'number': ritm_number
+    }
 
-Description: A vulnerability in an Amazon S3 bucket configuration.
-Date Snoozed: 2023-10-02
-Reason for Snoozing: Pending patch application, low impact, scheduled for next week.
-Expected Remediation Date: 2023-10-10
-Evidence: Attached Wiz scan report indicating low risk and an email conversation with the cloud team about the scheduled patch.
-Vulnerability Name: CVE-2023-54321
+    # Send a GET request to retrieve the RITM
+    response = requests.get(ritm_url, headers=headers, auth=auth, params=params)
 
-Description: A potential misconfiguration in a Google Cloud Storage bucket.
-Date Snoozed: 2023-09-20
-Reason for Snoozing: False positive after manual review.
-Expected Remediation Date: N/A (already resolved)
-Evidence: Attached documentation of the manual review process and the resolution.
-Support Case Information:
-You embed attachments or provide links to relevant support case information:
+    if response.status_code == 200:
+        # Parse and return the RITM data
+        ritm_data = response.json()['result']
+        return ritm_data
+    else:
+        print(f'Failed to retrieve RITM. Status code: {response.status_code}, Response: {response.text}')
+        return None  # Return None to indicate failure
 
-Case Number: SC-2023-7890
-Date Opened: 2023-09-18
-Summary of the Support Case: Communication with Wiz Support regarding the false positive detection in CVE-2023-54321.
-Attachments: Support ticket transcripts, emails with Wiz Support, and any diagnostic logs requested by Wiz Support.
-Decision Rationale:
-You explain why each vulnerability was snoozed:
+# Example usage:
+instance_url = 'https://your_instance.service-now.com'
+username = 'your_username'
+password = 'your_password'
+ritm_number = 'RITM0012345'  # Replace with the RITM number you want to retrieve
 
-CVE-2023-12345: The snooze decision was based on the scheduled patch release and a low-risk assessment.
-CVE-2023-54321: The snooze decision was due to a false positive determination after a thorough manual review.
-Monitoring and Review:
-You outline the process for regularly reviewing and removing the snooze status. This involves setting up automated checks and ensuring vulnerabilities are addressed as per the expected remediation dates.
+ritm_data = get_ritm_by_number(instance_url, username, password, ritm_number)
 
-Conclusion:
-You summarize the importance of maintaining this documentation to track vulnerabilities, ensure they are addressed, and demonstrate compliance with security policies and procedures.
+if ritm_data:
+    print('RITM Data:')
+    print('Number:', ritm_data.get('number'))
+    # Add more fields as needed
+else:
+    print('RITM not found or error occurred.')
