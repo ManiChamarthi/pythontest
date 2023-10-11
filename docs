@@ -1,43 +1,13 @@
-import requests
-
-def get_ritm_by_number(instance_url, username, password, ritm_number):
-    # Set up the request headers with Basic Authentication
-    headers = {
-        'Accept': 'application/json',
+result = if serviceManagedIsTrue {
+    "pass"
+} else {
+    "fail" {
+        not serviceManagedIsTrue
+    } {
+        min(overPermissivelyRules) < min(DeniedRules)
+    } {
+        count(overPermissivelyRules) > 0
+    } {
+        count(DeniedRules) == 0
     }
-
-    auth = (username, password)
-
-    # Construct the URL for retrieving the RITM by number
-    ritm_url = f'{instance_url}/api/now/table/sc_req_item'
-    
-    # Specify query parameters to filter by RITM number
-    params = {
-        'number': ritm_number
-    }
-
-    # Send a GET request to retrieve the RITM
-    response = requests.get(ritm_url, headers=headers, auth=auth, params=params)
-
-    if response.status_code == 200:
-        # Parse and return the RITM data
-        ritm_data = response.json()['result']
-        return ritm_data
-    else:
-        print(f'Failed to retrieve RITM. Status code: {response.status_code}, Response: {response.text}')
-        return None  # Return None to indicate failure
-
-# Example usage:
-instance_url = 'https://your_instance.service-now.com'
-username = 'your_username'
-password = 'your_password'
-ritm_number = 'RITM0012345'  # Replace with the RITM number you want to retrieve
-
-ritm_data = get_ritm_by_number(instance_url, username, password, ritm_number)
-
-if ritm_data:
-    print('RITM Data:')
-    print('Number:', ritm_data.get('number'))
-    # Add more fields as needed
-else:
-    print('RITM not found or error occurred.')
+}
