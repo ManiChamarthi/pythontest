@@ -5,73 +5,89 @@ from diagrams.aws.database import Dynamodb
 from diagrams.aws.storage import S3
 from diagrams.onprem.compute import Server
 from diagrams.generic.storage import Storage
-from diagrams.generic.blank import Blank
 from diagrams.onprem.client import Users
 
-with Diagram("M&A License Reporting Architecture - Horizontal Lambda Layout", show=True, direction="LR"):
+with Diagram("M&A License Reporting Architecture", show=True, direction="LR"):
 
-    # Input Layer
+    # ------------------ Input Layer ------------------
     with Cluster("Input Layer"):
         upload_file = Storage("Upload File")
-        s3_input = S3("S3: M&A Data")
-        lambda_input = Lambda("Lambda: M&A_Data_R_W")
-        dynamodb_table = Dynamodb("DynamoDB: wiz-mna-projects")
+        s3_ma_data = S3("S3: M&A Data")
+        lambda_rw = Lambda("M&A_Data_R_W")
+        dynamo_db = Dynamodb("DynamoDB: wiz-mna-projects")
 
-        upload_file >> s3_input >> lambda_input >> dynamodb_table
+        upload_file >> s3_ma_data >> lambda_rw >> dynamo_db
 
-    # ServiceNow CMDB Integration
+    # ------------------ ServiceNow CMDB ------------------
     with Cluster("ServiceNow CMDB Integration"):
-        lambda_cmdb = Lambda("Lambda: fetch_CMDB")
+        lambda_cmdb = Lambda("fetch_CMDB_cloud_accounts")
         servicenow = Server("ServiceNow CMDB")
         lambda_cmdb >> servicenow
 
-    # Wiz Integration (All Lambdas horizontal)
-    with Cluster("Wiz Integration"):
-        wiz = Blank("Wiz Platform")
-
-        wiz_lambdas = [
-            Lambda("wiz_Subscriptions"),
-            Lambda("EKS_on_fargate"),
-            Lambda("sagemaker_domains"),
-            Lambda("sagemaker_endpoints"),
-            Lambda("CMDB_report"),
-            Lambda("ECS_fargate"),
-            Lambda("cloudrun_revisions"),
-            Lambda("GKE_Autopilot"),
-            Lambda("VMs_report"),
-            Lambda("container_hosts"),
-            Lambda("non_05_disks"),
-            Lambda("non_05_disks_storing"),
-            Lambda("public_buckets"),
-            Lambda("registry_images"),
-            Lambda("serverless_functions"),
-        ]
-
-        wiz_output = S3("S3: Wiz Information")
-
-        # Horizontal chaining
-        wiz >> wiz_lambdas[0]
-        for i in range(len(wiz_lambdas) - 1):
-            wiz_lambdas[i] >> wiz_lambdas[i + 1]
-        wiz_lambdas[-1] >> wiz_output
-
-    # License Report Generation
-    with Cluster("License Report Generation"):
-        lambda_merge = Lambda("merge_and_licenses_count")
-        s3_license = S3("S3: License Report")
-
-        wiz_output >> lambda_merge
-        dynamodb_table >> lambda_merge
-        lambda_merge >> s3_license
-
-    # Email Notification
-    with Cluster("Email Notification"):
-        lambda_email = Lambda("send_email")
-        notify = Users("Notify via Email")
-        s3_license >> lambda_email >> notify
-
-    # EventBridge Rule (Central Trigger)
+    # ------------------ EventBridge ------------------
     eventbridge = Eventbridge("EventBridge Rule")
+
+    # ------------------ Wiz Integration with Subclusters ------------------
+    with Cluster("Wiz Integration"):
+
+        with Cluster("AI Workloads"):
+            ai_1 = Lambda("sagemaker_domains")
+            ai_2 = Lambda("sagemaker_endpoints")
+            ai_1 >> ai_2
+
+        with Cluster("Containers"):
+            cont_1 = Lambda("EKS_on_fargate")
+            cont_2 = Lambda("ECS_fargate")
+            cont_3 = Lambda("GKE_Autopilot")
+            cont_4 = Lambda("cloudrun_revisions")
+            cont_5 = Lambda("registry_images")
+            cont_1 >> cont_2 >> cont_3 >> cont_4 >> cont_5
+
+        with Cluster("VMs & Hosts"):
+            vm_1 = Lambda("VMs_report")
+            vm_2 = Lambda("container_hosts")
+            vm_3 = Lambda("non_05_disks")
+            vm_4 = Lambda("non_05_disks_storing")
+            vm_1 >> vm_2 >> vm_3 >> vm_4
+
+        with Cluster("Serverless"):
+            srv_1 = Lambda("serverless_functions")
+            srv_2 = Lambda("public_buckets")
+            srv_3 = Lambda("CMDB_report")
+            srv_4 = Lambda("wiz_Subscriptions")
+            srv_1 >> srv_2 >> srv_3 >> srv_4
+
+        wiz_output = S3("S3: Wiz Info")
+
+        # Push outputs to S3
+        ai_2 >> wiz_output
+        cont_5 >> wiz_output
+        vm_4 >> wiz_output
+        srv_4 >> wiz_output
+
+    # ------------------ License Report Generation ------------------
+    with Cluster("License Report Generation"):
+        merge_lambda = Lambda("merge_and_licenses_count")
+        license_s3 = S3("S3: License Report")
+        merge_lambda >> license_s3
+
+    # ------------------ Email Notification ------------------
+    with Cluster("Email Notification"):
+        email_lambda = Lambda("send_email")
+        user = Users("Notify via Email")
+        email_lambda >> user
+
+    # ------------------ Connections ------------------
+    # Wiz data to report generator
+    wiz_output >> merge_lambda
+
+    # Input data to report generator
+    dynamo_db >> merge_lambda
+
+    # Final report to email sender
+    license_s3 >> email_lambda
+
+    # EventBridge triggers
     eventbridge >> lambda_cmdb
-    eventbridge >> lambda_merge
-    eventbridge >> lambda_email
+    eventbridge >> merge_lambda
+    eventbridge >> email_lambda
