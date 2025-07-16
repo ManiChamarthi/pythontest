@@ -6,19 +6,19 @@ from diagrams.aws.storage import S3
 from diagrams.onprem.compute import Server
 from diagrams.generic.storage import Storage
 
-with Diagram("M&A License Reporting Architecture", show=True, direction="LR"):
+with Diagram("M&A License Reporting Architecture - Clustered Tree Layout", show=True, direction="LR"):
 
+    # Cluster: Input Layer
     with Cluster("Input Layer"):
         upload_file = Storage("Upload File (YAML)")
-        ma_data_bucket = S3("S3: M&A Data")
+        s3_ma_data = S3("S3: M&A Data")
         lambda_rw = Lambda("Lambda: M&A_Data_R_W")
-        dynamo_table = Dynamodb("DynamoDB: wiz-mna-projects")
+        dynamo_db = Dynamodb("DynamoDB: wiz-mna-projects")
 
-        upload_file >> ma_data_bucket >> lambda_rw >> dynamo_table
+        upload_file >> s3_ma_data >> lambda_rw >> dynamo_db
 
+    # Cluster: Wiz Integration
     with Cluster("Wiz Integration"):
-        wiz_output_bucket = S3("S3: Wiz Information")
-
         wiz_lambdas = [
             Lambda("wiz_Subscriptions_report"),
             Lambda("AWS_EKS_on_fargate_report"),
@@ -36,31 +36,33 @@ with Diagram("M&A License Reporting Architecture", show=True, direction="LR"):
             Lambda("registry_container_image"),
             Lambda("serverless_functions_report"),
         ]
+        wiz_output = S3("S3: Wiz Information")
+        wiz_lambdas >> wiz_output
 
-        wiz_lambdas >> wiz_output_bucket
-
+    # Cluster: ServiceNow CMDB Integration
     with Cluster("ServiceNow CMDB Integration"):
         lambda_cmdb = Lambda("fetch_CMDB_cloud_accounts")
         servicenow_cmdb = Server("ServiceNow CMDB")
         lambda_cmdb >> servicenow_cmdb
 
-    with Cluster("Report Generation"):
-        merge_and_count = Lambda("merge_and_licenses_count")
-        license_report = S3("S3: License Report")
-        merge_and_count >> license_report
+    # Cluster: License Report Generation
+    with Cluster("License Report Generation"):
+        merge_lambda = Lambda("merge_and_licenses_count")
+        s3_report = S3("S3: License Report")
 
+    # Cluster: Email Notification
     with Cluster("Email Notification"):
         send_email = Lambda("send_email")
 
-    # EventBridge orchestration
-    scheduler = Eventbridge("EventBridge Rule")
+    # Orchestration
+    eventbridge = Eventbridge("EventBridge Rule")
 
-    # Triggered flows
-    scheduler >> lambda_cmdb
-    scheduler >> merge_and_count
-    scheduler >> send_email
+    # EventBridge triggers
+    eventbridge >> lambda_cmdb
+    eventbridge >> merge_lambda
+    eventbridge >> send_email
 
-    # Data dependencies
-    wiz_output_bucket >> merge_and_count
-    dynamo_table >> merge_and_count
-    license_report >> send_email
+    # Data flow to report generation
+    wiz_output >> merge_lambda
+    dynamo_db >> merge_lambda
+    merge_lambda >> s3_report >> send_email
