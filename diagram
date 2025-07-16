@@ -8,21 +8,32 @@ from diagrams.generic.storage import Storage
 from diagrams.generic.blank import Blank
 from diagrams.onprem.client import Users
 
-with Diagram("M&A License Reporting Architecture", show=True, direction="LR"):
+with Diagram("M&A License Reporting Architecture - Custom Layout", show=True, direction="TB"):
 
-    # ---------------- INPUT LAYER ----------------
+    # Left side: Input Layer
     with Cluster("Input Layer"):
-        upload_file = Storage("Upload File (YAML)")
+        upload_file = Storage("Upload File")
         s3_ma_data = S3("S3: M&A Data")
         lambda_rw = Lambda("Lambda: M&A_Data_R_W")
         dynamo_db = Dynamodb("DynamoDB: wiz-mna-projects")
-
         upload_file >> s3_ma_data >> lambda_rw >> dynamo_db
 
-    # ---------------- WIZ INTEGRATION ----------------
-    with Cluster("Wiz Integration"):
-        wiz_icon = Blank("Wiz Platform")  # Represents the external Wiz service
+    # Left side: CMDB Layer
+    with Cluster("ServiceNow CMDB Integration"):
+        lambda_cmdb = Lambda("Lambda: fetch_CMDB_cloud_accounts")
+        servicenow = Server("ServiceNow CMDB")
+        lambda_cmdb >> servicenow
 
+    # Middle: Orchestration
+    eventbridge = Eventbridge("EventBridge Rule")
+
+    # CMDB and Input to EventBridge (trigger connections)
+    lambda_cmdb << eventbridge
+    lambda_rw << s3_ma_data
+
+    # Below: Wiz Integration
+    with Cluster("Wiz Integration"):
+        wiz_icon = Blank("Wiz Platform")
         wiz_lambdas = [
             Lambda("wiz_Subscriptions"),
             Lambda("EKS_on_fargate"),
@@ -40,48 +51,29 @@ with Diagram("M&A License Reporting Architecture", show=True, direction="LR"):
             Lambda("registry_images"),
             Lambda("serverless_functions"),
         ]
-
         wiz_output = S3("S3: Wiz Information")
-
-        # Connect Wiz icon to first Lambda
         wiz_icon >> wiz_lambdas[0]
-
-        # Connect all Wiz Lambdas horizontally
         for i in range(len(wiz_lambdas) - 1):
             wiz_lambdas[i] >> wiz_lambdas[i + 1]
-
-        # Last lambda outputs to Wiz S3
         wiz_lambdas[-1] >> wiz_output
 
-    # ---------------- CMDB INTEGRATION ----------------
-    with Cluster("ServiceNow CMDB Integration"):
-        lambda_cmdb = Lambda("fetch_CMDB_cloud_accounts")
-        servicenow_cmdb = Server("ServiceNow CMDB")
-        lambda_cmdb >> servicenow_cmdb
-
-    # ---------------- REPORT GENERATION ----------------
+    # License Report Generation (below Wiz)
     with Cluster("License Report Generation"):
         merge_lambda = Lambda("merge_and_licenses_count")
-        s3_report = S3("S3: License Report")
-        merge_lambda >> s3_report
+        report_s3 = S3("S3: License Report")
+        merge_lambda >> report_s3
 
-    # ---------------- EMAIL NOTIFICATION ----------------
-    with Cluster("Email Notification"):
-        send_email = Lambda("send_email")
-        email_icon = Users("Notify via Email")
-        send_email >> email_icon
-
-    # ---------------- EVENTBRIDGE ORCHESTRATION ----------------
-    eventbridge = Eventbridge("EventBridge Rule")
-
-    # EventBridge triggers all relevant lambdas
-    eventbridge >> lambda_cmdb
-    eventbridge >> merge_lambda
-    eventbridge >> send_email
-
-    # Data flows to report generation
+    # Data sources to report generator
     wiz_output >> merge_lambda
     dynamo_db >> merge_lambda
+    eventbridge >> merge_lambda
 
-    # Final output from report to email
-    s3_report >> send_email
+    # Right side: Email Notification
+    with Cluster("Email Notification"):
+        send_email = Lambda("send_email")
+        email_user = Users("Notify via Email")
+        send_email >> email_user
+
+    # Report to email
+    report_s3 >> send_email
+    eventbridge >> send_email
