@@ -6,6 +6,7 @@ from diagrams.aws.storage import S3
 from diagrams.onprem.compute import Server
 from diagrams.generic.storage import Storage
 from diagrams.onprem.client import Users
+from diagrams.generic.blank import Blank  # <- Wiz icon (custom)
 
 with Diagram("M&A License Reporting Architecture", show=True, direction="LR"):
 
@@ -27,7 +28,9 @@ with Diagram("M&A License Reporting Architecture", show=True, direction="LR"):
     # ------------------ EventBridge ------------------
     eventbridge = Eventbridge("EventBridge Rule")
 
-    # ------------------ Wiz Integration with Subclusters ------------------
+    # ------------------ Wiz Integration ------------------
+    wiz_icon = Blank("Wiz Platform")
+
     with Cluster("Wiz Integration"):
 
         with Cluster("AI Workloads"):
@@ -59,7 +62,10 @@ with Diagram("M&A License Reporting Architecture", show=True, direction="LR"):
 
         wiz_output = S3("S3: Wiz Info")
 
-        # Push outputs to S3
+        # Connect Wiz icon to subcluster entry Lambdas
+        wiz_icon >> [ai_1, cont_1, vm_1, srv_1]
+
+        # Each subcluster's final Lambda connects to wiz_output
         ai_2 >> wiz_output
         cont_5 >> wiz_output
         vm_4 >> wiz_output
@@ -77,17 +83,12 @@ with Diagram("M&A License Reporting Architecture", show=True, direction="LR"):
         user = Users("Notify via Email")
         email_lambda >> user
 
-    # ------------------ Connections ------------------
-    # Wiz data to report generator
+    # ------------------ Data Flow Connections ------------------
     wiz_output >> merge_lambda
-
-    # Input data to report generator
     dynamo_db >> merge_lambda
-
-    # Final report to email sender
     license_s3 >> email_lambda
 
-    # EventBridge triggers
+    # ------------------ EventBridge Triggers ------------------
     eventbridge >> lambda_cmdb
     eventbridge >> merge_lambda
     eventbridge >> email_lambda
